@@ -1,0 +1,45 @@
+{
+  "compilerOptions": {
+    "types": ["react", "react-dom"],
+    /* Language and Environment */
+    "target": "ESNext",                               /* Use the latest ECMAScript version. */
+    "module": "ESNext",                               /* Use modern ES modules. */
+    "lib": ["DOM", "DOM.Iterable", "ESNext"],         /* Specify the libraries to include. */
+    "jsx": "react-jsx",                               /* Use React JSX transform. */
+
+    /* Module Resolution */
+    "moduleResolution": "Node",                      /* Resolve modules using Node.js conventions. */
+    "baseUrl": ".",                                  /* Set the base directory for module resolution. */
+    "paths": {                                       /* Optionally map module paths. */
+      "*": ["node_modules/*", "src/*"]
+    },
+
+    /* Type Checking */
+    "strict": true,                                  /* Enable strict type-checking options. */
+    "forceConsistentCasingInFileNames": true,        /* Enforce consistent casing in file names. */
+    "skipLibCheck": true,                            /* Skip type checking for declaration files. */
+
+    /* Interoperability */
+    "esModuleInterop": true,                         /* Enable compatibility with CommonJS modules. */
+    "allowSyntheticDefaultImports": true,            /* Allow default imports from modules without default exports. */
+
+    /* Output Settings */
+    "outDir": "./dist",                              /* Specify the output directory for compiled files. */
+    "rootDir": "./src",                              /* Specify the root directory for input files. */
+
+    /* Debugging and Source Maps */
+    "sourceMap": true,                               /* Generate source map files for debugging. */
+    "inlineSources": true,                           /* Include source code in the source maps. */
+
+    /* React Settings */
+    "jsxImportSource": "react"                       /* Specify module for JSX transformations. */
+  },
+  "include": [
+    "src"                                            /* Include all files in the 'src' directory. */
+  ],
+  "exclude": [
+    "node_modules",                                  /* Exclude dependencies from type checking. */
+    "dist",                                          /* Exclude the build output directory. */
+    "build"                                          /* Exclude build artifacts. */
+  ]
+}
