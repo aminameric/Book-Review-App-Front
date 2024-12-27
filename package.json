@@ -3,10 +3,12 @@
   "version": "0.1.0",
   "private": true,
   "dependencies": {
-    "@tanstack/react-query": "^5.62.10",
+    "@tanstack/react-query": "^5.62.11",
+    "axios": "^1.7.9",
     "cra-template-typescript": "1.2.0",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
+    "react-router-dom": "^7.1.1",
     "web-vitals": "^4.2.4"
   },
   "scripts": {
@@ -39,6 +41,7 @@
     "@types/jest": "^29.5.14",
     "@types/react": "^19.0.2",
     "@types/react-dom": "^19.0.2",
+    "@types/react-router-dom": "^5.3.3",
     "react-scripts": "^5.0.1",
     "typescript": "^4.9.5"
   }

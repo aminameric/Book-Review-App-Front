@@ -1,4 +1,24 @@
 import React from 'react';
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import LoginPage from './pages/LoginPage';
+import BooksPage from './pages/BooksPage';
+
+const App: React.FC = () => (
+  <Router>
+    <Routes>
+      <Route path="/" element={<LoginPage />} />
+      <Route path="/books" element={<BooksPage />} />
+    </Routes>
+  </Router>
+);
+
+export default App;
+
+
+
+
+
+/*import React from 'react';
 import logo from './logo.svg';
 import './App.css';
 
@@ -21,6 +41,6 @@ function App() {
       </header>
     </div>
   );
-}
+}*/
 
-export default App;
+
