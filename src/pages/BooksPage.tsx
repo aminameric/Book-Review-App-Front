@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
-import {AddButton, BooksWrapper, CategoryCard, CategoryHeader, BooksContainer, BookItem, Stars, ReviewSection, ModalOverlay, ModalContent, Input, Select, ModalButton, CancelButton, ErrorMessage, OptionalHeading, LogoutButton, HeaderActions} from "../styles/BooksPageStyles"; // Adjust the path as necessary
-  
+import {AddButton, BooksWrapper, CategoryCard, CategoryHeader, BooksContainer, BookItem, Stars, ReviewContent, ModalOverlay, ModalContent, Input, Select, ModalButton, CancelButton, ErrorMessage, OptionalHeading, LogoutButton, HeaderActions, Progress, ReadingProgressLabel, ReviewSection, Navbar, Logo, NavText, GenerateButton} from "../styles/BooksPageStyles"; 
+import LogoImage from "../assets/logobook.png";  
 import { Book } from "../types/Book";
 
 const BooksPage: React.FC = () => {
@@ -9,6 +9,7 @@ const BooksPage: React.FC = () => {
   const [groupedBooks, setGroupedBooks] = useState<{ [key: string]: Book[] }>({});
   const [error, setError] = useState<string | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [generatedCategory, setGeneratedCategory] = useState<string>("");
   const [newBook, setNewBook] = useState({
     title: "",
     author: "",
@@ -36,21 +37,59 @@ const BooksPage: React.FC = () => {
       return;
     }
 
-    const fetchBooks = async () => {
-      try {
+    const fetchReviewsForBooks = async (books: Book[]) => {
         const baseUrl = process.env.REACT_APP_API_BASE_URL;
-        const response = await fetch(`${baseUrl}/books/user?email=${email}`);
-        if (!response.ok) {
-          throw new Error("Failed to fetch books.");
+        const userId = localStorage.getItem("userId");
+      
+        if (!userId) {
+          console.error("User ID is missing.");
+          return books; // Return the original books if user ID is missing
         }
-        const data = await response.json();
-        setBooks(data);
-        setGroupedBooks(groupBooksByCategory(data));
-      } catch (error) {
-        console.error("Error fetching books:", error);
-        setError("Failed to load books. Please try again.");
-      }
-    };
+      
+        const booksWithReviews = await Promise.all(
+          books.map(async (book) => {
+            try {
+              const response = await fetch(`${baseUrl}/user-books/review?bookId=${book.id}&userId=${userId}`);
+              if (!response.ok) {
+                throw new Error("Failed to fetch review for book: " + book.id);
+              }
+              const review = await response.json();
+              return { ...book, review }; // Add review to the book object
+            } catch (error) {
+              console.error(`Error fetching review for book ID ${book.id}:`, error);
+              return book; // Return the book without a review if an error occurs
+            }
+          })
+        );
+      
+        return booksWithReviews;
+      };
+      
+      
+    
+
+      const fetchBooks = async () => {
+        try {
+          const baseUrl = process.env.REACT_APP_API_BASE_URL;
+      
+          // Fetch books
+          const response = await fetch(`${baseUrl}/books/user?email=${email}`);
+          if (!response.ok) {
+            throw new Error("Failed to fetch books.");
+          }
+          const booksData = await response.json();
+      
+          // Fetch reviews and merge them into books
+          const booksWithReviews = await fetchReviewsForBooks(booksData);
+      
+          setBooks(booksWithReviews);
+          setGroupedBooks(groupBooksByCategory(booksWithReviews));
+        } catch (error) {
+          console.error("Error fetching books and/or reviews:", error);
+          setError("Failed to load books. Please try again.");
+        }
+      };
+      
 
     fetchBooks();
   }, [email]);
@@ -66,27 +105,75 @@ const BooksPage: React.FC = () => {
     }, {} as Record<string, Book[]>);
   };
 
+  const handleGenerateCategory = async () => {
+    try {
+      const baseUrl = process.env.REACT_APP_API_BASE_URL; // Ensure this is correctly set
+      const response = await fetch(`${baseUrl}/categories/suggest?title=${encodeURIComponent(newBook.title)}`);
+
+      
+      if (!response.ok) {
+        throw new Error("Failed to fetch category suggestion.");
+      }
+      
+      const category = await response.text(); // Parse as plain text
+      setNewBook({ ...newBook, categoryName: category });
+    } catch (error) {
+      console.error("Error fetching category suggestion:", error);
+    }
+  };
+  
+  
+
   const handleAddBook = async () => {
     try {
       const baseUrl = process.env.REACT_APP_API_BASE_URL;
-      const response = await fetch(`${baseUrl}/books`, {
+  
+      // Add the book first
+      const bookResponse = await fetch(`${baseUrl}/books`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          ...newBook,
+          title: newBook.title,
+          author: newBook.author,
+          categoryName: newBook.categoryName,
+          readingStatus: newBook.readingStatus,
           userId: parseInt(userId || "0"),
         }),
       });
-
-      if (!response.ok) {
+  
+      if (!bookResponse.ok) {
         throw new Error("Failed to add the book.");
       }
-
-      const addedBook = await response.json();
+  
+      const addedBook = await bookResponse.json();
+  
+      // If review details are provided, add the review
+      if (newBook.reviewContent && newBook.reviewRating > 0) {
+        const reviewResponse = await fetch(`${baseUrl}/user-books`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            content: newBook.reviewContent,
+            rating: newBook.reviewRating,
+            userId: parseInt(userId || "0"),
+            bookId: addedBook.id, // Use the ID of the newly added book
+          }),
+        });
+  
+        if (!reviewResponse.ok) {
+          throw new Error("Failed to add the review.");
+        }
+      }
+  
+      // Refresh the books list
       setBooks((prevBooks) => [...prevBooks, addedBook]);
       setGroupedBooks(groupBooksByCategory([...books, addedBook]));
+  
+      // Reset the modal
       setIsModalOpen(false);
       setNewBook({
         title: "",
@@ -96,45 +183,53 @@ const BooksPage: React.FC = () => {
         reviewContent: "",
         reviewRating: 0,
       });
+      setGeneratedCategory(""); // Reset generated category
     } catch (error) {
-      console.error("Error adding book:", error);
+      console.error("Error adding book and/or review:", error);
     }
   };
-
-  if (error) {
-    return <ErrorMessage>{error}</ErrorMessage>;
-  }
+  
 
   return (
+    <>
+    {/* Add the Navbar */}
+    <Navbar>
+    <div style={{ display: "flex", alignItems: "center" }}>
+        <Logo src={LogoImage} alt="Book Logo" />
+        <NavText>My Book Tracker</NavText>
+    </div>
+    <LogoutButton onClick={handleLogout}>Logout</LogoutButton>
+    </Navbar>
+    
     <BooksWrapper>
     <HeaderActions>
-    <LogoutButton onClick={handleLogout}>Logout</LogoutButton>
-    <AddButton onClick={() => setIsModalOpen(true)}>Add Book</AddButton>
-  </HeaderActions>
+        <AddButton onClick={() => setIsModalOpen(true)}>Add Book</AddButton>
+    </HeaderActions>
       {Object.keys(groupedBooks).map((category) => (
         <CategoryCard key={category}>
           <CategoryHeader>{category}</CategoryHeader>
           <BooksContainer>
             {groupedBooks[category].map((book) => (
-              <BookItem key={book.id}>
-                <h3>{book.title}</h3>
-                <p>by {book.author}</p>
-                <p>
-                  <strong>Reading Progress:</strong> {book.readingStatus}
-                </p>
-                {book.review ? (
-                  <ReviewSection>
-                    <p>
-                      <strong>Review:</strong> {book.review.content}
-                    </p>
-                    <Stars>{"★".repeat(book.review.rating)}</Stars>
-                  </ReviewSection>
-                ) :null}
-              </BookItem>
-            ))}
-          </BooksContainer>
-        </CategoryCard>
-      ))}
+            <BookItem key={book.id}>
+            {book.review && <Stars>{"★".repeat(book.review.rating)}</Stars>}
+      <h3>{book.title}</h3>
+      <p>by {book.author}</p>
+      <p>
+        <ReadingProgressLabel>Reading Progress:</ReadingProgressLabel>
+        {book.readingStatus}
+      </p>
+      {book.review && (
+        <ReviewSection>
+          <p>
+            <strong>Review:</strong> {book.review.content}
+          </p>
+        </ReviewSection>
+      )}
+    </BookItem>
+  ))}
+</BooksContainer>
+</CategoryCard>
+))}
 
 {isModalOpen && (
   <ModalOverlay>
@@ -165,8 +260,10 @@ const BooksPage: React.FC = () => {
           placeholder="Category Name"
           value={newBook.categoryName}
           onChange={(e) => setNewBook({ ...newBook, categoryName: e.target.value })}
-          required
         />
+        <GenerateButton type="button" onClick={handleGenerateCategory}>
+          Generate Category
+        </GenerateButton>
         <Select
           value={newBook.readingStatus}
           onChange={(e) => setNewBook({ ...newBook, readingStatus: e.target.value })}
@@ -207,6 +304,7 @@ const BooksPage: React.FC = () => {
 )}
 
     </BooksWrapper>
+    </>
   );
 };
 

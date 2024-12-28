@@ -2,51 +2,55 @@ import styled from "styled-components";
 
 // Styled Components
 export const AddButton = styled.button`
-  background: #B7A57A;
-  color: #4A4A4A;
+  background-color: #b7a57a;
+  color: #4a4a4a;
   border: none;
-  border-radius: 4px;
-  padding: 0.8rem 1.5rem;
-  font-size: 1rem;
+  border-radius: 12px;
+  padding: 1rem 4rem;
+  font-size: 1.2rem;
+  font-weight: bold;
   cursor: pointer;
+  margin-left: 20px; /* Space between logout and add book buttons */
+  margin-top: 4rem;
   box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
 
   &:hover {
-    background: #BDBDBD;
+    background-color: #a09070;
   }
 `;
 
+
 export const BooksWrapper = styled.div`
+  padding-top: 80px; /* Adjust based on the navbar height */
   display: flex;
   flex-wrap: wrap;
   gap: 2rem;
   justify-content: center;
   align-items: flex-start;
-  padding: 6rem 2rem 2rem; /* Add top padding to make space for the button */
+  padding: 2rem;
   background: #faf3e0;
   min-height: 100vh;
-  position: relative; /* Ensures the button is positioned relative to this wrapper */
 `;
 
 
+
 export const CategoryCard = styled.div`
-  background: #f9f9f9;
-  border-radius: 12px;
-  padding: 1.5rem; /* Reduce padding */
-  width: 35%; /* Full-width to fit the layout */
-  box-shadow: 0px 6px 12px rgba(0, 0, 0, 0.1);
+  background: #ffffff;
+  border-radius: 8px; /* Slight rounding for rectangle effect */
+  padding: 1rem; /* Reduced padding for compact look */
+  width: 600px; /* Adjust width to fit two cards side by side */
+  box-shadow: 0px 6px 12px rgba(0, 0, 0, 0.15);
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 1rem;
+  gap: 3rem;
   transition: transform 0.3s, box-shadow 0.3s;
-
+  margin-top: 8rem;
   &:hover {
     transform: translateY(-8px);
     box-shadow: 0px 12px 24px rgba(0, 0, 0, 0.2);
   }
 `;
-
 
 
 export const CategoryHeader = styled.h2`
@@ -63,55 +67,73 @@ export const CategoryHeader = styled.h2`
 
 export const BooksContainer = styled.div`
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); /* Adjust min size for cards */
-  gap: 1.5rem; /* Reduce gap between cards */
-  justify-items: center; /* Center cards horizontally */
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); /* Ensures two cards fit side by side */
+  gap: 2rem; /* Add spacing between cards */
+  justify-content: space-between; /* Better alignment of books */
+  width: 90%; /* Stretch to fit the parent card */
+  
 `;
 
 export const BookItem = styled.div`
-  background: #ffffff;
-  padding: 1.2rem;
-  border-radius: 8px;
-  box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.1);
-  width: 240px; /* Adjust width for a rectangular look */
-  height: 320px; /* Adjust height for balance */
+  background: #f4e4c1;
+  padding: 1rem;
+  border-radius: 0 10px 10px 0; /* Rounded corners like a book spine */
+  width: 200px;
+  height: 300px;
   text-align: center;
-  transition: transform 0.3s, box-shadow 0.3s;
+  box-shadow: -6px 0 8px rgba(0, 0, 0, 0.1); /* Add depth to the book */
   display: flex;
   flex-direction: column;
-  justify-content: space-between; /* Distribute content evenly */
-
-  &:hover {
-    transform: translateY(-8px);
-    box-shadow: 0px 8px 16px rgba(0, 0, 0, 0.2);
-  }
+  justify-content: space-between;
+  align-items: center;
+  position: relative;
+  transform: perspective(1000px) rotateY(-5deg); /* Slight tilt for a 3D effect */
+  overflow: hidden;
 
   h3 {
-    font-size: 1.2rem;
+    font-size: 1.4rem;
     font-weight: bold;
-    color: #333;
-    margin: 0.5rem 0;
+    margin-top: 1rem;
   }
 
   p {
     font-size: 1rem;
-    color: #555;
-    margin: 0.3rem 0;
+    margin: 0.5rem 0;
+    color: #4a4a4a;
+  }
+
+  &:before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: -10px;
+    width: 10px;
+    height: 100%;
+    background: linear-gradient(to right, #d4c49d, #f4e4c1);
+    box-shadow: -2px 0 5px rgba(0, 0, 0, 0.1); /* Spine shadow */
+  }
+
+  &:hover {
+    transform: perspective(1000px) rotateY(-3deg);
+    box-shadow: -8px 4px 16px rgba(0, 0, 0, 0.3); /* Add hover effect */
   }
 `;
 
 
 export const Stars = styled.div`
   color: #ffd700;
-  font-size: 1.2rem;
-  margin-top: 0.5rem;
+  font-size: 1.4rem;
+  text-align: center;
+  margin-bottom: 0.5rem;
+  
 `;
 
-export const ReviewSection = styled.div`
-  margin-top: 1rem;
+export const ReviewContent = styled.div`
+  margin-top: 0.5rem;
   font-size: 0.9rem;
   color: #555;
   text-align: center;
+  font-style: italic;
 `;
 
 export const ModalOverlay = styled.div`
@@ -218,7 +240,7 @@ export const HeaderActions = styled.div`
 
 
 export const LogoutButton = styled.button`
-  background: #B7A57A;
+  background: #f4e4c1;
   color: #4A4A4A;
   text-align: center;
   padding: 0.8rem 1.5rem;
@@ -234,3 +256,105 @@ export const LogoutButton = styled.button`
     color: white; /* White text on hover for contrast */
   }
 `;
+
+export const Progress = styled.div`
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 0.3rem;
+
+  span {
+    font-weight: bold;
+    color: #b7a57a;
+    font-size: 1rem;
+  }
+
+  .progress-status {
+    font-size: 1rem;
+    font-weight: bold;
+    color: #333;
+  }
+`;
+
+export const ReadingProgressLabel = styled.span`
+  font-weight: bold;
+  color: #b7a57a; /* Muted brown for emphasis */
+  margin-right: 0.3rem;
+`;
+
+export const ReviewSection = styled.div`
+margin-top: 1rem;
+font-size: 0.9rem;
+color: #555;
+text-align: center;
+background: #f9f9f9;
+padding: 0.8rem;
+border-radius: 8px;
+box-shadow: 0px 2px 6px rgba(0, 0, 0, 0.1);
+
+p {
+  margin: 0.5rem 0;
+}
+`;
+
+export const Navbar = styled.nav`
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 1000;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.5rem 1.5rem;
+  background-color: #b7a57a;
+  border-radius: 2px;
+  margin: 0 auto;
+  max-width: 100%; /* Adjust the width */
+  max-height: 50px;
+  box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
+`;
+
+
+export const Logo = styled.img`
+  width: 50px;
+  height: 50px;
+  margin-right: 1rem;
+`;
+
+export const NavText = styled.h1`
+  font-size: 1.6rem;
+  color: #4a4a4a;
+  display: flex;
+  align-items: center;
+`;
+
+export const HeaderButtons = styled.div`
+  display: flex;
+  gap: 1rem;
+`;
+
+export const GenerateButton = styled.button`
+  background: #f4a261;
+  color: white;
+  border: none;
+  padding: 0.8rem 1.5rem;
+  font-size: 1.2rem;
+  font-weight: bold;
+  border-radius: 8px;
+  margin: 0.5rem 0;
+  cursor: pointer;
+  transition: transform 0.2s, background-color 0.2s;
+
+  &:hover {
+    background: #e76f51;
+    transform: scale(1.05);
+  }
+
+  &:active {
+    transform: scale(0.95);
+  }
+`;
+
+
+
