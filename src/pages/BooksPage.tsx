@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
-import {AddButton, BooksWrapper, CategoryCard, CategoryHeader, BooksContainer, BookItem, Stars, ReviewContent, ModalOverlay, ModalContent, Input, Select, ModalButton, CancelButton, ErrorMessage, OptionalHeading, LogoutButton, HeaderActions, Progress, ReadingProgressLabel, ReviewSection, Navbar, Logo, NavText, GenerateButton} from "../styles/BooksPageStyles"; 
+import {AddButton, BooksWrapper, CategoryCard, CategoryHeader, BooksContainer, BookItem, Stars, ReviewContent, ModalOverlay, ModalContent, Input, Select, ModalButton, CancelButton, ErrorMessage, OptionalHeading, LogoutButton, HeaderActions, Progress, ReadingProgressLabel, ReviewSection, Navbar, Logo, NavText, GenerateButton, IconWrapper, EditIcon, DeleteIcon} from "../styles/BooksPageStyles"; 
 import LogoImage from "../assets/logobook.png";  
 import { Book } from "../types/Book";
 
@@ -10,6 +10,8 @@ const BooksPage: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [generatedCategory, setGeneratedCategory] = useState<string>("");
+  const [isDeletePopupOpen, setIsDeletePopupOpen] = useState(false);
+  const [bookToDelete, setBookToDelete] = useState<number | null>(null);
   const [newBook, setNewBook] = useState({
     title: "",
     author: "",
@@ -121,8 +123,33 @@ const BooksPage: React.FC = () => {
       console.error("Error fetching category suggestion:", error);
     }
   };
+
+  //deletion of book
+  const confirmDelete = (bookId: number) => {
+    setIsDeletePopupOpen(true);
+    setBookToDelete(bookId);
+  };
   
+  const handleDeleteBook = async (bookId: number) => {
+    try {
+      const baseUrl = process.env.REACT_APP_API_BASE_URL;
+      const response = await fetch(`${baseUrl}/books/${bookId}`, {
+        method: "DELETE",
+      });
   
+      if (!response.ok) {
+        throw new Error("Failed to delete book.");
+      }
+  
+      // Refresh book list after deletion
+      const updatedBooks = books.filter((book) => book.id !== bookId);
+      setBooks(updatedBooks);
+      setGroupedBooks(groupBooksByCategory(updatedBooks));
+      setIsDeletePopupOpen(false);
+    } catch (error) {
+      console.error("Error deleting book:", error);
+    }
+  };
 
   const handleAddBook = async () => {
     try {
@@ -147,7 +174,7 @@ const BooksPage: React.FC = () => {
         throw new Error("Failed to add the book.");
       }
   
-      const addedBook = await bookResponse.json();
+      const addedBook: Book = await bookResponse.json();
   
       // If review details are provided, add the review
       if (newBook.reviewContent && newBook.reviewRating > 0) {
@@ -190,120 +217,149 @@ const BooksPage: React.FC = () => {
   };
   
 
+    function handleEdit(book: Book): void {
+        throw new Error("Function not implemented.");
+    }
+
   return (
     <>
-    {/* Add the Navbar */}
-    <Navbar>
-    <div style={{ display: "flex", alignItems: "center" }}>
-        <Logo src={LogoImage} alt="Book Logo" />
-        <NavText>My Book Tracker</NavText>
-    </div>
-    <LogoutButton onClick={handleLogout}>Logout</LogoutButton>
-    </Navbar>
-    
-    <BooksWrapper>
-    <HeaderActions>
-        <AddButton onClick={() => setIsModalOpen(true)}>Add Book</AddButton>
-    </HeaderActions>
-      {Object.keys(groupedBooks).map((category) => (
-        <CategoryCard key={category}>
-          <CategoryHeader>{category}</CategoryHeader>
-          <BooksContainer>
-            {groupedBooks[category].map((book) => (
-            <BookItem key={book.id}>
-            {book.review && <Stars>{"★".repeat(book.review.rating)}</Stars>}
-      <h3>{book.title}</h3>
-      <p>by {book.author}</p>
-      <p>
-        <ReadingProgressLabel>Reading Progress:</ReadingProgressLabel>
-        {book.readingStatus}
-      </p>
-      {book.review && (
-        <ReviewSection>
-          <p>
-            <strong>Review:</strong> {book.review.content}
-          </p>
-        </ReviewSection>
-      )}
-    </BookItem>
-  ))}
-</BooksContainer>
-</CategoryCard>
-))}
-
-{isModalOpen && (
-  <ModalOverlay>
-    <ModalContent>
-      <h2>Add a New Book</h2>
-      <form
-        onSubmit={(e) => {
-          e.preventDefault();
-          handleAddBook(); // Ensure this handles optional fields correctly
-        }}
-      >
-        <Input
-          type="text"
-          placeholder="Title"
-          value={newBook.title}
-          onChange={(e) => setNewBook({ ...newBook, title: e.target.value })}
-          required
-        />
-        <Input
-          type="text"
-          placeholder="Author"
-          value={newBook.author}
-          onChange={(e) => setNewBook({ ...newBook, author: e.target.value })}
-          required
-        />
-        <Input
-          type="text"
-          placeholder="Category Name"
-          value={newBook.categoryName}
-          onChange={(e) => setNewBook({ ...newBook, categoryName: e.target.value })}
-        />
-        <GenerateButton type="button" onClick={handleGenerateCategory}>
-          Generate Category
-        </GenerateButton>
-        <Select
-          value={newBook.readingStatus}
-          onChange={(e) => setNewBook({ ...newBook, readingStatus: e.target.value })}
-          required
-        >
-          <option value="">Select Reading Status</option>
-          <option value="NOT_STARTED">Not Started</option>
-          <option value="IN_PROGRESS">In Progress</option>
-          <option value="COMPLETED">Completed</option>
-        </Select>
-
-        {/* Optional Fields Section */}
-        <OptionalHeading>Optional Review Details</OptionalHeading>
-        <Input
-          type="text"
-          placeholder="Summary of Review"
-          value={newBook.reviewContent}
-          onChange={(e) => setNewBook({ ...newBook, reviewContent: e.target.value })}
-        />
-        <Input
-          type="number"
-          placeholder="Review Rating (1-5)"
-          value={newBook.reviewRating || ""}
-          onChange={(e) =>
-            setNewBook({
-              ...newBook,
-              reviewRating: parseInt(e.target.value) || 0,
-            })
-          }
-          min="1"
-          max="5"
-        />
-        <ModalButton type="submit">Add</ModalButton>
-        <CancelButton onClick={() => setIsModalOpen(false)}>Cancel</CancelButton>
-      </form>
-    </ModalContent>
-  </ModalOverlay>
-)}
-
-    </BooksWrapper>
+      <Navbar>
+        <div style={{ display: "flex", alignItems: "center" }}>
+          <Logo src={LogoImage} alt="Book Logo" />
+          <NavText>My Book Tracker</NavText>
+        </div>
+        <LogoutButton onClick={handleLogout}>Logout</LogoutButton>
+      </Navbar>
+  
+      <BooksWrapper>
+        <HeaderActions>
+          <AddButton onClick={() => setIsModalOpen(true)}>Add Book</AddButton>
+        </HeaderActions>
+  
+        {Object.keys(groupedBooks).map((category) => (
+          <CategoryCard key={category}>
+            <CategoryHeader>{category}</CategoryHeader>
+            <BooksContainer>
+              {groupedBooks[category].map((book) => (
+                <BookItem key={book.id}>
+                  {book.review && <Stars>{"★".repeat(book.review.rating)}</Stars>}
+                  <h3>{book.title}</h3>
+                  <p>by {book.author}</p>
+                  <p>
+                    <ReadingProgressLabel>Reading Progress:</ReadingProgressLabel>
+                    {book.readingStatus}
+                  </p>
+                  {book.review && (
+                    <ReviewSection>
+                      <p>
+                        <strong>Review:</strong> {book.review.content}
+                      </p>
+                    </ReviewSection>
+                  )}
+                  <IconWrapper>
+                    <EditIcon onClick={() => handleEdit(book)}>✏️</EditIcon>
+                    <DeleteIcon onClick={() => confirmDelete(book.id)}>🗑️</DeleteIcon>
+                  </IconWrapper>
+                </BookItem>
+              ))}
+            </BooksContainer>
+          </CategoryCard>
+        ))}
+  
+        {/* Add Book Modal */}
+        {isModalOpen && (
+          <ModalOverlay>
+            <ModalContent>
+              <h2>Add a New Book</h2>
+              <form
+                onSubmit={(e) => {
+                  e.preventDefault();
+                  handleAddBook();
+                }}
+              >
+                <Input
+                  type="text"
+                  placeholder="Title"
+                  value={newBook.title}
+                  onChange={(e) => setNewBook({ ...newBook, title: e.target.value })}
+                  required
+                />
+                <Input
+                  type="text"
+                  placeholder="Author"
+                  value={newBook.author}
+                  onChange={(e) => setNewBook({ ...newBook, author: e.target.value })}
+                  required
+                />
+                <Input
+                  type="text"
+                  placeholder="Category Name"
+                  value={newBook.categoryName}
+                  onChange={(e) =>
+                    setNewBook({ ...newBook, categoryName: e.target.value })
+                  }
+                />
+                <GenerateButton type="button" onClick={handleGenerateCategory}>
+                  Generate Category
+                </GenerateButton>
+                <Select
+                  value={newBook.readingStatus}
+                  onChange={(e) =>
+                    setNewBook({ ...newBook, readingStatus: e.target.value })
+                  }
+                  required
+                >
+                  <option value="">Select Reading Status</option>
+                  <option value="NOT_STARTED">Not Started</option>
+                  <option value="IN_PROGRESS">In Progress</option>
+                  <option value="COMPLETED">Completed</option>
+                </Select>
+                <OptionalHeading>Optional Review Details</OptionalHeading>
+                <Input
+                  type="text"
+                  placeholder="Summary of Review"
+                  value={newBook.reviewContent}
+                  onChange={(e) =>
+                    setNewBook({ ...newBook, reviewContent: e.target.value })
+                  }
+                />
+                <Input
+                  type="number"
+                  placeholder="Review Rating (1-5)"
+                  value={newBook.reviewRating || ""}
+                  onChange={(e) =>
+                    setNewBook({
+                      ...newBook,
+                      reviewRating: parseInt(e.target.value) || 0,
+                    })
+                  }
+                  min="1"
+                  max="5"
+                />
+                <ModalButton type="submit">Add</ModalButton>
+                <CancelButton onClick={() => setIsModalOpen(false)}>Cancel</CancelButton>
+              </form>
+            </ModalContent>
+          </ModalOverlay>
+        )}
+  
+        {/* Delete Confirmation Modal */}
+        {isDeletePopupOpen && (
+          <ModalOverlay>
+            <ModalContent>
+              <h2>Are you sure you want to delete this book?</h2>
+              <div>
+                <ModalButton onClick={() => bookToDelete !== null ? handleDeleteBook(bookToDelete) : null}>
+                  Yes, Delete
+                </ModalButton>
+                <CancelButton onClick={() => setIsDeletePopupOpen(false)}>
+                  Cancel
+                </CancelButton>
+              </div>
+            </ModalContent>
+          </ModalOverlay>
+        )}
+      </BooksWrapper>
     </>
   );
 };

@@ -58,6 +58,8 @@ const Login: React.FC = () => {
     </LoginWrapper>
   );
 };
+
+//styling
 const LoginWrapper = styled.div`
   height: 100vh;
   display: flex;
@@ -71,8 +73,6 @@ const LoginWrapper = styled.div`
     url(${backgroundImage}) no-repeat center center/cover;
 `;
 
-
-
 const LoginForm = styled.div`
   background: rgba(255, 255, 255, 0.85);
   padding: 2rem;
@@ -84,44 +84,36 @@ const LoginForm = styled.div`
 `;
 
 const Input = styled.input`
-  width: 90%; /* Set a percentage to control the width relative to the parent */
-  max-width: 400px; /* Set a maximum width to avoid excessive stretching */
+ width: 90%;
   padding: 0.8rem;
-  margin: 0 auto 1rem; /* Center the input field and add spacing below */
-  border: 2px solid #007bff;
-  border-radius: 4px;
   font-size: 1rem;
-  color: #333;
-  background-color: #f9f9f9;
+  border: 2px solid #b7a57a; /* Application color for border */
+  border-radius: 8px;
+  margin-bottom: 1rem;
+  outline: none;
+  box-shadow: inset 0px 4px 6px rgba(0, 0, 0, 0.1);
 
   &:focus {
-    outline: none;
-    border-color: #0056b3;
-    box-shadow: 0 0 5px rgba(0, 123, 255, 0.5);
+    border-color: #a09070; /* Highlight color on focus */
+    box-shadow: 0px 0px 8px rgba(176, 144, 112, 0.6);
   }
 `;
 
 
 const Button = styled.button`
-  width: 100%;
-  padding: 0.8rem;
-  background: #007bff;
-  color: white;
+ background-color: #b7a57a; /* Application color */
+  color: #4a4a4a; /* Text color */
   border: none;
-  border-radius: 4px;
+  border-radius: 8px;
+  padding: 0.8rem 1.5rem;
+  font-size: 1.2rem;
+  font-weight: bold;
   cursor: pointer;
-  font-size: 1rem;
-  font-weight: bold; /* Make the text bolder */
-  transition: background 0.3s ease, transform 0.2s ease;
+  box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
+  transition: background-color 0.3s ease;
 
   &:hover {
-    background: #0056b3;
-    transform: scale(1.05); /* Slight pop effect */
-  }
-
-  &:active {
-    background: #003d80;
-    transform: scale(1); /* Reset scale */
+    background-color: #a09070; /* Slightly darker shade for hover */
   }
 `;
 

@@ -79,7 +79,7 @@ export const BookItem = styled.div`
   padding: 1rem;
   border-radius: 0 10px 10px 0; /* Rounded corners like a book spine */
   width: 200px;
-  height: 300px;
+  height: 350px; 
   text-align: center;
   box-shadow: -6px 0 8px rgba(0, 0, 0, 0.1); /* Add depth to the book */
   display: flex;
@@ -356,5 +356,38 @@ export const GenerateButton = styled.button`
   }
 `;
 
+// Wrapper for icons
+export const IconWrapper = styled.div`
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 10px; /* Space between icons */
+  margin-top: 10px; /* Space between review and icons */
+`;
 
+// Edit Icon
+export const EditIcon = styled.span`
+  font-size: 1.5rem;
+  color: #f9a825; /* Bright yellow */
+  cursor: pointer;
+  transition: transform 0.2s, color 0.2s;
+
+  &:hover {
+    color: #c77800; /* Darker yellow on hover */
+    transform: scale(1.2); /* Slight zoom effect */
+  }
+`;
+
+// Delete Icon
+export const DeleteIcon = styled.span`
+  font-size: 1.5rem;
+  color: #d32f2f; /* Bright red */
+  cursor: pointer;
+  transition: transform 0.2s, color 0.2s;
+
+  &:hover {
+    color: #b71c1c; /* Darker red on hover */
+    transform: scale(1.2); /* Slight zoom effect */
+  }
+`;
 
