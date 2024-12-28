@@ -6,6 +6,10 @@ export interface Book {
     author: string;
     readingStatus: string;
     categoryId: number;
-    category: Category; // Include the category object here
+    category: Category; 
     userBooks: any[];
+    review?: {
+        content: string;
+        rating: number;
+    };
 }
