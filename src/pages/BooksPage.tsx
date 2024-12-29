@@ -21,6 +21,17 @@ const BooksPage: React.FC = () => {
     reviewRating: 0,
   });
 
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [bookToEdit, setBookToEdit] = useState<Book | null>(null);
+  const [editedBook, setEditedBook] = useState({
+  title: "",
+  author: "",
+  readingStatus: "",
+  reviewContent: "",
+  reviewRating: 0,
+});
+
+
   const location = useLocation();
   const navigate = useNavigate();
 
@@ -151,6 +162,20 @@ const BooksPage: React.FC = () => {
     }
   };
 
+  //editing
+  const handleEdit = (book: Book) => {
+    setBookToEdit(book);
+    setEditedBook({
+      title: book.title,
+      author: book.author,
+      readingStatus: book.readingStatus || "",
+      reviewContent: book.review?.content || "",
+      reviewRating: book.review?.rating || 0,
+    });
+    setIsEditModalOpen(true);
+  };
+  
+
   const handleAddBook = async () => {
     try {
       const baseUrl = process.env.REACT_APP_API_BASE_URL;
@@ -217,9 +242,80 @@ const BooksPage: React.FC = () => {
   };
   
 
-    function handleEdit(book: Book): void {
-        throw new Error("Function not implemented.");
+  const handleSaveEdit = async () => {
+    if (!bookToEdit) return;
+  
+    try {
+      const baseUrl = process.env.REACT_APP_API_BASE_URL;
+  
+      // Update the book details
+      const bookResponse = await fetch(`${baseUrl}/books/${bookToEdit.id}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          title: editedBook.title,
+          author: editedBook.author,
+          readingStatus: editedBook.readingStatus,
+        }),
+      });
+  
+      if (!bookResponse.ok) {
+        throw new Error("Failed to update the book.");
+      }
+  
+      // Check if the review exists
+      const reviewEndpoint = bookToEdit.review?.id
+        ? `${baseUrl}/user-books/${bookToEdit.review.id}` // Update existing review
+        : `${baseUrl}/user-books`; // Create new review
+  
+      const reviewMethod = bookToEdit.review?.id ? "PUT" : "POST";
+  
+      // Handle review creation or update
+      const reviewResponse = await fetch(reviewEndpoint, {
+        method: reviewMethod,
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          content: editedBook.reviewContent,
+          rating: editedBook.reviewRating,
+          userId: parseInt(userId || "0"), // Use correct user ID
+          bookId: bookToEdit.id,          // Include book ID
+        }),
+      });
+  
+      if (!reviewResponse.ok) {
+        throw new Error("Failed to update or add the review.");
+      }
+  
+      // Refresh the book list
+      const updatedBooks = books.map((book) =>
+        book.id === bookToEdit.id
+          ? {
+              ...book,
+              title: editedBook.title,
+              author: editedBook.author,
+              readingStatus: editedBook.readingStatus,
+              review: {
+                content: editedBook.reviewContent,
+                rating: editedBook.reviewRating,
+              },
+            }
+          : book
+      );
+      setBooks(updatedBooks);
+      setGroupedBooks(groupBooksByCategory(updatedBooks));
+      setIsEditModalOpen(false);
+      setBookToEdit(null);
+    } catch (error) {
+      console.error("Error updating or creating review:", error);
     }
+  };
+  
+  
+  
 
   return (
     <>
@@ -245,7 +341,7 @@ const BooksPage: React.FC = () => {
                   {book.review && <Stars>{"★".repeat(book.review.rating)}</Stars>}
                   <h3>{book.title}</h3>
                   <p>by {book.author}</p>
-                  <p>
+                  <p style={{ display: "flex", alignItems: "center" }}>
                     <ReadingProgressLabel>Reading Progress:</ReadingProgressLabel>
                     {book.readingStatus}
                   </p>
@@ -357,11 +453,75 @@ const BooksPage: React.FC = () => {
                 </CancelButton>
               </div>
             </ModalContent>
-          </ModalOverlay>
+          </ModalOverlay> 
         )}
+
+{isEditModalOpen && bookToEdit && (
+  <ModalOverlay>
+    <ModalContent>
+      <h2>Edit Book</h2>
+      <form
+        onSubmit={(e) => {
+          e.preventDefault();
+          handleSaveEdit();
+        }}
+      >
+        <Input
+          type="text"
+          placeholder="Title"
+          value={editedBook.title}
+          onChange={(e) => setEditedBook({ ...editedBook, title: e.target.value })}
+          required
+        />
+        <Input
+          type="text"
+          placeholder="Author"
+          value={editedBook.author}
+          onChange={(e) => setEditedBook({ ...editedBook, author: e.target.value })}
+          required
+        />
+        <Select
+          value={editedBook.readingStatus}
+          onChange={(e) => setEditedBook({ ...editedBook, readingStatus: e.target.value })}
+          required
+        >
+          <option value="">Select Reading Status</option>
+          <option value="NOT_STARTED">Not Started</option>
+          <option value="IN_PROGRESS">In Progress</option>
+          <option value="COMPLETED">Completed</option>
+        </Select>
+        <OptionalHeading>Edit Review Details</OptionalHeading>
+        <Input
+          type="text"
+          placeholder="Summary of Review"
+          value={editedBook.reviewContent}
+          onChange={(e) => setEditedBook({ ...editedBook, reviewContent: e.target.value })}
+        />
+        <Input
+          type="number"
+          placeholder="Review Rating (1-5)"
+          value={editedBook.reviewRating || ""}
+          onChange={(e) =>
+            setEditedBook({
+              ...editedBook,
+              reviewRating: parseInt(e.target.value) || 0,
+            })
+          }
+          min="1"
+          max="5"
+        />
+        <ModalButton type="submit">Save Changes</ModalButton>
+        <CancelButton onClick={() => setIsEditModalOpen(false)}>Cancel</CancelButton>
+      </form>
+    </ModalContent>
+  </ModalOverlay>
+)}
+
       </BooksWrapper>
     </>
   );
+
+  
 };
 
 

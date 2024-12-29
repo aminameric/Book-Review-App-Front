@@ -9,6 +9,7 @@ export interface Book {
     category: Category; 
     userBooks: any[];
     review?: {
+        id?: number;
         content: string;
         rating: number;
     };
