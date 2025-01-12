@@ -1,1 +1,1 @@
-AI-Driven Software Engineering Project - Book Review Application - Frontend
+AI-Driven Software Engineering Project - Book Review Application - Frontend.
