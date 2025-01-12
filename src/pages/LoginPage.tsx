@@ -2,46 +2,48 @@ import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import styled from "styled-components";
 import backgroundImage from "../assets/backgroundImage.jpeg";
+import API_BASE_URL from "../config";
 
 const Login: React.FC = () => {
   const [email, setEmail] = useState("");
   const navigate = useNavigate();
 
-  const handleLogin = async () => {
+const handleLogin = async () => {
     if (!email) {
-      alert("Please enter a valid email.");
-      return;
-    }
-  
-    try {
-      const baseUrl = process.env.REACT_APP_API_BASE_URL; // Use API base URL from .env
-      const response = await fetch(`${baseUrl}/users?email=${email}`);
-  
-      if (!response.ok) {
-        throw new Error("User not found or invalid email.");
-      }
-  
-      const users = await response.json();
-      const user = users.find((u: { email: string }) => u.email === email);
-  
-      if (!user) {
-        alert("No user found with the provided email.");
+        alert("Please enter a valid email.");
         return;
-      }
-  
-      console.log(user); // Debug log to inspect user data
-  
-      localStorage.setItem("userId", user.id); // Save user ID in localStorage
-      localStorage.setItem("userEmail", user.email); // Save email for further use if needed
-  
-      navigate(`/books?email=${encodeURIComponent(email)}`);
-    } catch (error) {
-      console.error("Error logging in:", error);
-      alert("Failed to login. Please try again.");
     }
-  };
-  
-  
+
+    try {
+        // ✅ Using the global constant instead of process.env
+        const response = await fetch(`${API_BASE_URL}/users?email=${encodeURIComponent(email)}`);
+
+        if (!response.ok) {
+            throw new Error("User not found or invalid email.");
+        }
+
+        const users = await response.json();
+        const user = users.find((u: { email: string }) => u.email === email);
+
+        if (!user) {
+            alert("No user found with the provided email.");
+            return;
+        }
+
+        console.log("User Data:", user);  // ✅ Debug log to inspect user data
+
+        // ✅ Save user details in localStorage for future use
+        localStorage.setItem("userId", user.id);
+        localStorage.setItem("userEmail", user.email);
+
+        // ✅ Navigate after successful login
+        navigate(`/books?email=${encodeURIComponent(email)}`);
+    } catch (error) {
+        console.error("Error logging in:", error);
+        alert("Failed to login. Please try again.");
+    }
+};
+ 
   return (
     <LoginWrapper>
       <LoginForm>

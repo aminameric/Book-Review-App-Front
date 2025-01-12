@@ -1,4 +1,4 @@
-import { Category } from './Category';
+import { Category } from "./Category";
 
 export interface Book {
     id: number;
@@ -6,11 +6,11 @@ export interface Book {
     author: string;
     readingStatus: string;
     categoryId: number;
-    category: Category; 
+    category: Category;
     userBooks: any[];
     review?: {
         id?: number;
         content: string;
         rating: number;
-    };
+    };  // ✅ Removed reviewContent and reviewRating for clarity
 }

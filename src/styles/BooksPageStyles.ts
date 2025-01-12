@@ -159,33 +159,67 @@ export const ModalContent = styled.div`
 `;
 
 export const Input = styled.input`
-  width: 100%;
-  padding: 0.8rem;
+  width: 90%;
+  padding: 12px;
   margin-bottom: 1rem;
   border: 1px solid #ddd;
-  border-radius: 4px;
+  border-radius: 10px;
+  font-size: 1rem;
+  transition: border-color 0.3s ease;
+
+  &:focus {
+    border-color: #b7a57a;
+    outline: none;
+  }
 `;
 
 export const Select = styled.select`
-  width: 100%;
+width: 95%; 
+padding: 12px;
+margin-bottom: 1rem;
+border: 1px solid #ddd;
+border-radius: 8px;
+font-size: 1rem;
+box-sizing: border-box; /* Prevents padding from altering the size */
+transition: border-color 0.3s ease;
+
+&:focus {
+  border-color: #28a745;
+  outline: none;
+}
+`;
+
+export const GenerateButton = styled.button`
+  width: 70%;
   padding: 0.8rem;
-  margin-bottom: 1rem;
-  border: 1px solid #ddd;
-  border-radius: 4px;
+  background: #b7a57a;
+  color: #000000;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 1.3rem;
+  font-weight: bold;
+  margin-bottom: 1rem; /* Added spacing below the button */
+
+  &:hover {
+    background: #a09070;
+  }
 `;
 
 export const ModalButton = styled.button`
-background: #B7A57A;
-color: #4A4A4A;
-text-align: center;
-padding: 0.5rem 1rem;
-border-radius: 8px;
-font-size: 1.4rem;
-font-weight: bold;
-width: fit-content;
-margin-bottom: 1rem;
-border: none;
-cursor: pointer;
+  width: 100%;
+  padding: 12px;
+  background: #28a745;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 1rem;
+  margin-top: 1rem;
+
+  &:hover {
+    background: #218838;
+  }
 `;
 
 export const CancelButton = styled.button`
@@ -208,8 +242,6 @@ export const ErrorMessage = styled.p`
   text-align: center;
   margin-top: 2rem;
 `;
-
-
 
 export const NoReviewMessage = styled.p`
   color: #888;
@@ -236,8 +268,6 @@ export const HeaderActions = styled.div`
   gap: 1rem; /* Space between buttons */
   z-index: 10;
 `;
-
-
 
 export const LogoutButton = styled.button`
   background: #f4e4c1;
@@ -334,28 +364,6 @@ export const HeaderButtons = styled.div`
   gap: 1rem;
 `;
 
-export const GenerateButton = styled.button`
-  background: #f4a261;
-  color: white;
-  border: none;
-  padding: 0.8rem 1.5rem;
-  font-size: 1.2rem;
-  font-weight: bold;
-  border-radius: 8px;
-  margin: 0.5rem 0;
-  cursor: pointer;
-  transition: transform 0.2s, background-color 0.2s;
-
-  &:hover {
-    background: #e76f51;
-    transform: scale(1.05);
-  }
-
-  &:active {
-    transform: scale(0.95);
-  }
-`;
-
 // Wrapper for icons
 export const IconWrapper = styled.div`
   display: flex;
@@ -390,4 +398,15 @@ export const DeleteIcon = styled.span`
     transform: scale(1.2); /* Slight zoom effect */
   }
 `;
+
+export const Button = styled.button`
+    padding: 10px;
+    background: #28a745;
+    color: white;
+    border: none;
+    cursor: pointer;
+`;
+
+
+
 

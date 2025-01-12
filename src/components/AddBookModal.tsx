@@ -1,25 +1,67 @@
-import React, { useState } from "react";
+import React from "react";
+import { ModalOverlay, ModalContent, Input, Select, AddButton, GenerateButton } from "../styles/BooksPageStyles";
 import styled from "styled-components";
 
 interface AddBookModalProps {
   onClose: () => void;
-  onAddBook: (newBook: { title: string; author: string; categoryId: number; readingStatus: string }) => void;
+  onAddBook: (book: {
+    title: string;
+    author: string;
+    categoryName: string;
+    readingStatus: string;
+    reviewContent?: string;
+    reviewRating?: number;
+  }) => void;
+  onGenerateCategory: (title: string) => void;
+  newBook: {
+    title: string;
+    author: string;
+    categoryName: string;
+    readingStatus: string;
+    reviewContent?: string;
+    reviewRating?: number;
+  };
+  setNewBook: React.Dispatch<React.SetStateAction<{
+    title: string;
+    author: string;
+    categoryName: string;
+    readingStatus: string;
+    reviewContent?: string;
+    reviewRating?: number;
+  }>>;
 }
 
-const AddBookModal: React.FC<AddBookModalProps> = ({ onClose, onAddBook }) => {
-  const [title, setTitle] = useState("");
-  const [author, setAuthor] = useState("");
-  const [categoryId, setCategoryId] = useState<number | undefined>();
-  const [readingStatus, setReadingStatus] = useState("");
+const AddBookModal: React.FC<AddBookModalProps> = ({
+  onClose,
+  onAddBook,
+  newBook,
+  setNewBook,
+  onGenerateCategory,
+}) => {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (title && author && categoryId && readingStatus) {
-      onAddBook({ title, author, categoryId, readingStatus });
-      onClose();
-    } else {
-      alert("Please fill out all fields.");
-    }
+    onAddBook(newBook); // Fixed here to pass the book correctly
+  };
+
+  // Handle input changes
+  const handleChange = (field: string, value: string | number) => {
+    setNewBook((prev) => ({
+      ...prev,
+      [field]: value,
+    }));
+  };
+
+  // Clear the form when closing or submitting
+  const handleResetForm = () => {
+    setNewBook({
+      title: "",
+      author: "",
+      categoryName: "",
+      readingStatus: "",
+      reviewContent: "",
+      reviewRating: 0,
+    });
   };
 
   return (
@@ -27,35 +69,78 @@ const AddBookModal: React.FC<AddBookModalProps> = ({ onClose, onAddBook }) => {
       <ModalContent>
         <h2>Add a New Book</h2>
         <form onSubmit={handleSubmit}>
+          {/* Title Input */}
           <Input
             type="text"
             placeholder="Title"
-            value={title}
-            onChange={(e) => setTitle(e.target.value)}
+            value={newBook.title}
+            onChange={(e) => handleChange("title", e.target.value)}
+            required
           />
+
+          {/* Author Input */}
           <Input
             type="text"
             placeholder="Author"
-            value={author}
-            onChange={(e) => setAuthor(e.target.value)}
+            value={newBook.author}
+            onChange={(e) => handleChange("author", e.target.value)}
+            required
           />
+
+          {/* Category Name Input */}
           <Input
-            type="number"
-            placeholder="Category ID"
-            value={categoryId}
-            onChange={(e) => setCategoryId(Number(e.target.value))}
+            type="text"
+            placeholder="Category Name"
+            value={newBook.categoryName}
+            onChange={(e) => handleChange("categoryName", e.target.value)}
           />
+
+          {/* Generate Category Button */}
+          <GenerateButton type="button" onClick={() => onGenerateCategory(newBook.title)}>
+            Generate Category
+          </GenerateButton>
+
+          {/* Reading Status Dropdown */}
           <Select
-            value={readingStatus}
-            onChange={(e) => setReadingStatus(e.target.value)}
+            value={newBook.readingStatus}
+            onChange={(e) => handleChange("readingStatus", e.target.value)}
+            required
           >
             <option value="">Select Reading Status</option>
             <option value="NOT_STARTED">Not Started</option>
             <option value="IN_PROGRESS">In Progress</option>
             <option value="COMPLETED">Completed</option>
           </Select>
-          <Button type="submit">Add Book</Button>
-          <CancelButton type="button" onClick={onClose}>
+
+          {/* Review Content Input */}
+          <Input
+            type="text"
+            placeholder="Review Content"
+            value={newBook.reviewContent}
+            onChange={(e) => handleChange("reviewContent", e.target.value)}
+          />
+
+          {/* Review Rating Input */}
+          <Input
+            type="number"
+            placeholder="Review Rating (1-5)"
+            value={newBook.reviewRating || ""}
+            onChange={(e) =>
+              handleChange("reviewRating", parseInt(e.target.value) || 0)
+            }
+            min="1"
+            max="5"
+          />
+
+          {/* Add and Cancel Buttons */}
+          <AddButton type="submit">Add Book</AddButton>
+          <CancelButton
+            type="button"
+            onClick={() => {
+              onClose();
+              handleResetForm(); // Clear fields when closing the modal
+            }}
+          >
             Cancel
           </CancelButton>
         </form>
@@ -64,61 +149,7 @@ const AddBookModal: React.FC<AddBookModalProps> = ({ onClose, onAddBook }) => {
   );
 };
 
-// CSS
-const ModalOverlay = styled.div`
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background: rgba(0, 0, 0, 0.5);
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  z-index: 1000;
-`;
-
-const ModalContent = styled.div`
-  background: #ffffff;
-  padding: 2rem;
-  border-radius: 8px;
-  width: 400px;
-  text-align: center;
-  box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
-`;
-
-const Input = styled.input`
-  width: 100%;
-  padding: 0.8rem;
-  margin-bottom: 1rem;
-  border: 1px solid #ddd;
-  border-radius: 4px;
-`;
-
-const Select = styled.select`
-  width: 100%;
-  padding: 0.8rem;
-  margin-bottom: 1rem;
-  border: 1px solid #ddd;
-  border-radius: 4px;
-`;
-
-const Button = styled.button`
-  width: 100%;
-  padding: 0.8rem;
-  background: #007bff;
-  color: white;
-  border: none;
-  border-radius: 4px;
-  cursor: pointer;
-  font-size: 1rem;
-  margin-top: 1rem;
-
-  &:hover {
-    background: #0056b3;
-  }
-`;
-
+// Styled Components (unchanged)
 const CancelButton = styled.button`
   width: 100%;
   padding: 0.8rem;
