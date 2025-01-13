@@ -34,6 +34,7 @@ const BooksPage: React.FC = () => {
         reviewContent: "",
         reviewRating: 0,
     });
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const [editedBook, setEditedBook] = useState<Book>({
         id: 0,
         title: "",
@@ -309,9 +310,11 @@ const BooksPage: React.FC = () => {
         }
     };
     
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     useEffect(() => {
         fetchBooks();
     }, []);
+
 
     return (
         <BooksWrapper>
