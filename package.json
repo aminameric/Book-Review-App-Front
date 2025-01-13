@@ -10,10 +10,10 @@
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
     "react-router-dom": "^7.1.1",
+    "react-scripts": "^5.0.1",
     "styled-components": "^6.1.13",
-    "web-vitals": "^4.2.4",
-    "react-scripts": "^5.0.1"
-},
+    "web-vitals": "^4.2.4"
+  },
   "scripts": {
     "start": "react-scripts start",
     "build": "react-scripts build",
@@ -39,6 +39,7 @@
     ]
   },
   "devDependencies": {
+    "@babel/plugin-proposal-private-property-in-object": "^7.21.11",
     "@testing-library/jest-dom": "^6.6.3",
     "@testing-library/react": "^16.1.0",
     "@types/jest": "^29.5.14",
@@ -47,5 +48,5 @@
     "@types/react-router-dom": "^5.3.3",
     "@types/styled-components": "^5.1.34",
     "typescript": "^4.9.5"
-}
+  }
 }
