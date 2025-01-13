@@ -1,4 +1,4 @@
-import React, { useCallback, useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import NavbarComponent from "../components/Navbar";
 import BookList from "../components/BookList";
@@ -25,7 +25,7 @@ const BooksPage: React.FC = () => {
     const [isDeletePopupOpen, setIsDeletePopupOpen] = useState(false);
     const [isEditModalOpen, setIsEditModalOpen] = useState(false);
     const [bookToDelete, setBookToDelete] = useState<number | null>(null);
-    const [bookToEdit, setBookToEdit] = useState<Book | null>(null);
+    const [editedBook, setEditedBook] = useState<Book | null>(null);
     const [newBook, setNewBook] = useState<NewBookState>({
         title: "",
         author: "",
@@ -34,26 +34,7 @@ const BooksPage: React.FC = () => {
         reviewContent: "",
         reviewRating: 0,
     });
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    const [editedBook, setEditedBook] = useState<Book>({
-        id: 0,
-        title: "",
-        author: "",
-        categoryId: 0,
-        category: {
-            id: 0,
-            name: ""
-        },
-        readingStatus: "",
-        userBooks: [],
-        review: {
-            id: 0,
-            content: "",
-            rating: 0
-        }
-    });
-    
-    
+
     const navigate = useNavigate();
 
     const handleLogout = () => {
@@ -61,61 +42,45 @@ const BooksPage: React.FC = () => {
         navigate("/");
     };
 
-    const fetchBooks = async () => {
+    const fetchBooks = useCallback(async () => {
         try {
             const email = localStorage.getItem("userEmail");
-    
             if (!email) {
                 console.error("No email found in localStorage.");
                 return;
             }
-    
-            // ✅ Using the global constant here instead of process.env
             const response = await fetch(`${API_BASE_URL}/books/user?email=${encodeURIComponent(email)}`);
-            
-            if (!response.ok) {
-                throw new Error("Failed to fetch books.");
-            }
-    
+            if (!response.ok) throw new Error("Failed to fetch books.");
             const booksData = await response.json();
-    
-            if (!Array.isArray(booksData)) {
-                throw new Error("Invalid books data format received.");
-            }
-    
-            // ✅ Fetching reviews after receiving books data
             const booksWithReviews = await fetchReviewsForBooks(booksData);
             setBooks(booksWithReviews);
             setGroupedBooks(groupBooksByCategory(booksWithReviews));
-    
         } catch (error) {
-            console.error("Error fetching books and/or reviews:", error);
+            console.error("Error fetching books:", error);
         }
-    };
+    }, []);
 
     const fetchReviewsForBooks = async (books: Book[]) => {
         const userId = localStorage.getItem("userId");
-    
         if (!userId) {
             console.error("No user ID found in localStorage.");
             return books;
         }
-    
+
         return await Promise.all(
             books.map(async (book) => {
                 try {
-                    // ✅ Using the global constant instead of process.env directly
-                    const response = await fetch(`${API_BASE_URL}/user-books/review?bookId=${book.id}&userId=${userId}`);
-                    
+                    const response = await fetch(
+                        `${API_BASE_URL}/user-books/review?bookId=${book.id}&userId=${userId}`
+                    );
                     if (!response.ok) {
                         throw new Error(`Failed to fetch review for book ID: ${book.id}`);
                     }
-                    
                     const review = await response.json();
-                    return { ...book, review }; // ✅ Adding the review to the book object
+                    return { ...book, review };
                 } catch (error) {
                     console.error(`Error fetching review for book ID ${book.id}:`, error);
-                    return book; // ✅ Return book without review in case of error
+                    return book;
                 }
             })
         );
@@ -124,42 +89,33 @@ const BooksPage: React.FC = () => {
     const groupBooksByCategory = (books: Book[]) => {
         return books.reduce((acc, book) => {
             const categoryName = book.category?.name || "Uncategorized";
-            if (!acc[categoryName]) {
-                acc[categoryName] = [];
-            }
+            if (!acc[categoryName]) acc[categoryName] = [];
             acc[categoryName].push(book);
             return acc;
         }, {} as { [key: string]: Book[] });
     };
 
     const handleGenerateCategory = async () => {
-    try {
-        const response = await fetch(`${API_BASE_URL}/categories/suggest?title=${newBook.title}`);
-        
-        if (!response.ok) {
-            throw new Error("Failed to generate category.");
+        try {
+            const response = await fetch(`${API_BASE_URL}/categories/suggest?title=${newBook.title}`);
+            if (!response.ok) throw new Error("Failed to generate category.");
+            const category = await response.text();
+            setNewBook((prev) => ({ ...prev, categoryName: category }));
+        } catch (error) {
+            console.error("Error generating category:", error);
         }
-
-        const category = await response.text();
-        
-        // ✅ Updating state with the generated category
-        setNewBook((prev) => ({ ...prev, categoryName: category }));
-    } catch (error) {
-        console.error("Error generating category:", error);
-    }
     };
-
 
     const handleAddBook = async () => {
         try {
             const userId = localStorage.getItem("userId");
-
+    
             if (!userId) {
                 console.error("User ID is missing.");
                 return;
             }
-
-            // ✅ Using the global constant
+    
+            // ✅ Step 1: Add the book first
             const bookResponse = await fetch(`${API_BASE_URL}/books`, {
                 method: "POST",
                 headers: {
@@ -173,14 +129,14 @@ const BooksPage: React.FC = () => {
                     userId: parseInt(userId),
                 }),
             });
-
+    
             if (!bookResponse.ok) {
                 throw new Error("Failed to add the book.");
             }
-
+    
             let addedBook: Book = await bookResponse.json();
-
-            // ✅ Review Handling
+    
+            // ✅ Step 2: Conditionally add review if provided
             if (newBook.reviewContent && newBook.reviewRating && newBook.reviewRating > 0) {
                 const reviewResponse = await fetch(`${API_BASE_URL}/user-books`, {
                     method: "POST",
@@ -191,22 +147,24 @@ const BooksPage: React.FC = () => {
                         content: newBook.reviewContent,
                         rating: newBook.reviewRating,
                         userId: parseInt(userId),
-                        bookId: addedBook.id,
+                        bookId: addedBook.id,  // Link review to the newly added book
                     }),
                 });
-
-                if (reviewResponse.ok) {
-                    const addedReview = await reviewResponse.json();
-                    addedBook = { ...addedBook, review: addedReview }; 
+    
+                if (!reviewResponse.ok) {
+                    throw new Error("Failed to add the review.");
                 }
+    
+                const addedReview = await reviewResponse.json();
+                addedBook = { ...addedBook, review: addedReview }; 
             }
-
-            // ✅ Updating State
+    
+            // ✅ Step 3: Update the state with the new book
             setBooks((prevBooks) => [...prevBooks, addedBook]);
             setGroupedBooks(groupBooksByCategory([...books, addedBook]));
             setIsModalOpen(false);
-
-            // ✅ Reset Form State
+    
+            // ✅ Step 4: Reset the form fields after adding
             setNewBook({
                 title: "",
                 author: "",
@@ -215,115 +173,89 @@ const BooksPage: React.FC = () => {
                 reviewContent: "",
                 reviewRating: 0,
             });
+    
+            alert("Book added successfully!");
         } catch (error) {
             console.error("Error adding book and/or review:", error);
+            alert("Failed to add the book. Please try again.");
         }
     };
+    
+    
+    // ✅ New function to handle cancel and reset the modal
+    const handleCancel = () => {
+        setIsModalOpen(false);
+        setNewBook({
+            title: "",
+            author: "",
+            categoryName: "",
+            readingStatus: "",
+            reviewContent: "",
+            reviewRating: 0,
+        });
+    };
+    
 
     const handleDeleteBook = async (bookId: number) => {
         try {
-            // ✅ Using the global constant
             const response = await fetch(`${API_BASE_URL}/books/${bookId}`, {
                 method: "DELETE",
             });
-
+    
             if (!response.ok) {
-                throw new Error("Failed to delete book.");
+                throw new Error("Failed to delete the book.");
             }
-
-            // ✅ Updating State After Deletion
+    
+            // ✅ Immediately update the local state
             const updatedBooks = books.filter((book) => book.id !== bookId);
             setBooks(updatedBooks);
             setGroupedBooks(groupBooksByCategory(updatedBooks));
-
-            // ✅ Closing the Modal and Resetting State
+    
             setIsDeletePopupOpen(false);
             setBookToDelete(null);
+            alert("Book deleted successfully!");
         } catch (error) {
             console.error("Error deleting book:", error);
         }
     };
+    
+
+    const handleEditClick = (book: Book) => {
+        setEditedBook({ ...book });
+        setIsEditModalOpen(true);
+    };
 
     const handleSaveEdit = async () => {
-        if (!bookToEdit) {
+        if (!editedBook) {
             alert("No book selected for editing.");
             return;
         }
 
         try {
-            const userId = localStorage.getItem("userId");
-
-            if (!userId) {
-                alert("User ID is missing from local storage. Please log in again.");
-                return;
-            }
-
-            // ✅ Using the existing `review` object directly
-            const updatedBookToEdit = {
-                ...bookToEdit,
-                review: {
-                    id: bookToEdit.review?.id ?? undefined, 
-                    content: bookToEdit.review?.content || "",
-                    rating: bookToEdit.review?.rating || 0
-                }
-            };
-
-            // ✅ Step 1: Prepare the Book Payload (Directly Using `review`)
-            const bookPayload = {
-                id: updatedBookToEdit.id,
-                title: updatedBookToEdit.title,
-                author: updatedBookToEdit.author,
-                readingStatus: updatedBookToEdit.readingStatus,
-                categoryId: updatedBookToEdit.categoryId,
-                category: updatedBookToEdit.category,
-                userBooks: updatedBookToEdit.userBooks,
-                review: updatedBookToEdit.review
-            };
-
-            // ✅ Step 2: Send the Book Update Request (Book and Review Together)
-            const bookResponse = await fetch(`${API_BASE_URL}/books/${updatedBookToEdit.id}`, {
+            const response = await fetch(`${API_BASE_URL}/books/${editedBook.id}`, {
                 method: "PUT",
                 headers: {
                     "Content-Type": "application/json",
                 },
-                body: JSON.stringify(bookPayload),
+                body: JSON.stringify(editedBook),
             });
 
-            if (!bookResponse.ok) {
-                throw new Error(`Failed to update the book: ${await bookResponse.text()}`);
-            }
-            console.log("Book updated successfully!");
+            if (!response.ok) throw new Error("Failed to update book.");
 
-            // ✅ Step 3: Update State After Successful Request
             const updatedBooks = books.map((book) =>
-                book.id === updatedBookToEdit.id ? updatedBookToEdit : book
+                book.id === editedBook.id ? editedBook : book
             );
             setBooks(updatedBooks);
             setGroupedBooks(groupBooksByCategory(updatedBooks));
             setIsEditModalOpen(false);
-            setBookToEdit(null);
-
-            alert("Book and review updated successfully!");
-
         } catch (error) {
-            console.error("Error during update process:", error);
+            console.error("Error saving edit:", error);
         }
     };
-    
-    const loadBooks = useCallback(async () => {
-        try {
-            const response = await fetch(`${API_BASE_URL}/books`);
-            const data = await response.json();
-            setBooks(data);
-        } catch (error) {
-            console.error("Failed to fetch books:", error);
-        }
-    }, []);
-    
+
     useEffect(() => {
-        loadBooks();
-    }, [loadBooks]);
-    
+        fetchBooks();
+    }, [fetchBooks]);
 
     return (
         <BooksWrapper>
@@ -334,34 +266,18 @@ const BooksPage: React.FC = () => {
 
             {isModalOpen && (
                 <AddBookModal
-                    onClose={() => setIsModalOpen(false)}
+                    onClose={handleCancel}  // Use handleCancel here for proper reset
                     onAddBook={handleAddBook}
                     onGenerateCategory={handleGenerateCategory}
                     newBook={newBook}
                     setNewBook={setNewBook}
                 />
+            
             )}
 
             <BookList
                 groupedBooks={groupedBooks}
-                handleEdit={(book) => {
-                    setBookToEdit(book);  // Keeping the original Book object structure
-                    setEditedBook({
-                        id: book.id,
-                        title: book.title,
-                        author: book.author,
-                        readingStatus: book.readingStatus || "",
-                        categoryId: book.categoryId,
-                        category: book.category,
-                        userBooks: book.userBooks,
-                        review: {
-                            id: book.review?.id ?? 0,
-                            content: book.review?.content || "",
-                            rating: book.review?.rating || 0
-                        }
-                    });
-                    setIsEditModalOpen(true);
-                }}
+                handleEdit={handleEditClick}
                 confirmDelete={(bookId) => {
                     setBookToDelete(bookId);
                     setIsDeletePopupOpen(true);
@@ -376,10 +292,10 @@ const BooksPage: React.FC = () => {
                 />
             )}
 
-            {isEditModalOpen && bookToEdit && (
+            {isEditModalOpen && editedBook && (
                 <EditBookModal
-                    bookToEdit={bookToEdit}
-                    setBookToEdit={setBookToEdit}
+                    bookToEdit={editedBook}
+                    setBookToEdit={setEditedBook}
                     handleSaveEdit={handleSaveEdit}
                     setIsEditModalOpen={setIsEditModalOpen}
                 />
