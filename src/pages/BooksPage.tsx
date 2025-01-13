@@ -311,7 +311,8 @@ const BooksPage: React.FC = () => {
     
     useEffect(() => {
         fetchBooks();
-    }, []);
+    }, [fetchBooks]); 
+    
 
     return (
         <BooksWrapper>
