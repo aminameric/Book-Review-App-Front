@@ -34,7 +34,24 @@ const BooksPage: React.FC = () => {
         reviewContent: "",
         reviewRating: 0,
     });
-
+    const [editedBook, setEditedBook] = useState<Book>({
+        id: 0,
+        title: "",
+        author: "",
+        categoryId: 0,
+        category: {
+            id: 0,
+            name: ""
+        },
+        readingStatus: "",
+        userBooks: [],
+        review: {
+            id: 0,
+            content: "",
+            rating: 0
+        }
+    });
+    
     
     const navigate = useNavigate();
 
@@ -291,13 +308,10 @@ const BooksPage: React.FC = () => {
             console.error("Error during update process:", error);
         }
     };
-
-    
     
     useEffect(() => {
         fetchBooks();
-    }, [fetchBooks]); 
-    
+    }, []);
 
     return (
         <BooksWrapper>
@@ -319,7 +333,8 @@ const BooksPage: React.FC = () => {
             <BookList
                 groupedBooks={groupedBooks}
                 handleEdit={(book) => {
-                    setBookToEdit({
+                    setBookToEdit(book);  // Keeping the original Book object structure
+                    setEditedBook({
                         id: book.id,
                         title: book.title,
                         author: book.author,
@@ -335,7 +350,6 @@ const BooksPage: React.FC = () => {
                     });
                     setIsEditModalOpen(true);
                 }}
-                
                 confirmDelete={(bookId) => {
                     setBookToDelete(bookId);
                     setIsDeletePopupOpen(true);
