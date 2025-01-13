@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useCallback, useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import NavbarComponent from "../components/Navbar";
 import BookList from "../components/BookList";
@@ -310,11 +310,20 @@ const BooksPage: React.FC = () => {
         }
     };
     
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    useEffect(() => {
-        fetchBooks();
+    const loadBooks = useCallback(async () => {
+        try {
+            const response = await fetch(`${API_BASE_URL}/books`);
+            const data = await response.json();
+            setBooks(data);
+        } catch (error) {
+            console.error("Failed to fetch books:", error);
+        }
     }, []);
-
+    
+    useEffect(() => {
+        loadBooks();
+    }, [loadBooks]);
+    
 
     return (
         <BooksWrapper>
