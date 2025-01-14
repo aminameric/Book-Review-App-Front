@@ -83,15 +83,28 @@ const EditBookModal: React.FC<EditBookModalProps> = ({ bookToEdit, setBookToEdit
                             if (value >= 0 && value <= 5) {
                                 handleChange("reviewRating", value); // ✅ Only updates if within the range
                             } else {
-                                alert("Rating must be between 0 and 5."); // ✅ Alert if out of range
+                                alert("Rating must be between 0 and 5.");
                             }
                         }}
                         placeholder="Review Rating (0-5)"
                         min={0}
                         max={5}
                     />
-                    <ModalButton type="submit">Save Changes</ModalButton>
-                    <CancelButton onClick={() => setIsEditModalOpen(false)}>Cancel</CancelButton>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', alignItems: 'center' }}>
+                    <ModalButton 
+                        type="submit" 
+                        style={{ fontSize: '1rem', padding: '0.8rem 2rem', width: '70%' }}
+                    >
+                        Save Changes
+                    </ModalButton>
+
+                    <CancelButton 
+                        onClick={() => setIsEditModalOpen(false)} 
+                        style={{ fontSize: '1rem', padding: '1rem 3rem', width: '70%' }}
+                    >
+                        Cancel
+                    </CancelButton>
+                </div>
                 </form>
             </ModalContent>
         </ModalOverlay>

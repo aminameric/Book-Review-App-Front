@@ -133,7 +133,9 @@ const AddBookModal: React.FC<AddBookModalProps> = ({
           />
 
           {/* Add and Cancel Buttons */}
-          <AddButton type="submit">Add Book</AddButton>
+          <AddButton type="submit" style={{ marginTop: "1rem" }}>
+            Add Book
+          </AddButton>
           <CancelButton
             type="button"
             onClick={() => {
