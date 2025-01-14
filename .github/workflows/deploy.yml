@@ -25,7 +25,7 @@ jobs:
         env:
           RENDER_API_KEY: ${{ secrets.RENDER_API_KEY }}
         run: |
-          render workspace set book-review-workspace -o json
+          render workspace set "Amina's Workspace" -o json
       # Step 4: Get Commit SHA
       - name: Get Commit SHA
         id: git-info
