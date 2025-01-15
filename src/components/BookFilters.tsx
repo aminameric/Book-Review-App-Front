@@ -87,6 +87,11 @@ const BookFilters: React.FC<BookFiltersProps> = ({ filters, setFilters, fetchBoo
         setFilters((prev: any) => ({ ...prev, [name]: value }));
     };
 
+    const handleApplyFilters = () => {
+        fetchBooks(true);  // ✅ Use the callback to fetch filtered results
+        setIsModalOpen(false);  // ✅ Close the modal after applying filters
+    };
+
     return (
         <>
             <FilterButton onClick={() => setIsModalOpen(true)}>
@@ -140,7 +145,7 @@ const BookFilters: React.FC<BookFiltersProps> = ({ filters, setFilters, fetchBoo
                                 <option value="desc">Descending</option>
                             </select>
                         </div>
-                        <button onClick={() => { fetchBooks(true); setIsModalOpen(false); }}>Apply Filters</button>
+                        <button onClick={handleApplyFilters}>Apply Filters</button>
                         <button onClick={() => setIsModalOpen(false)}>Close</button>
                     </FilterModal>
                 </FilterModalOverlay>
