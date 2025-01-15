@@ -60,20 +60,19 @@ const BooksPage: React.FC = () => {
                 return;
             }
     
-            let url = `${API_BASE_URL}/books/user?email=${encodeURIComponent(email)}`;
+            // Dynamically choose between filtered and unfiltered fetch
+            const queryParams = new URLSearchParams({
+                title: useFilters ? filters.title : "",
+                author: useFilters ? filters.author : "",
+                readingStatus: useFilters ? filters.readingStatus : "",
+                category: useFilters ? filters.category : "",
+                sortBy: filters.sortBy || "title",
+                order: filters.order || "asc",
+            }).toString();
     
-            // If filters should be used, append them as query parameters
-            if (useFilters) {
-                const queryParams = new URLSearchParams({
-                    title: filters.title || "",
-                    author: filters.author || "",
-                    readingStatus: filters.readingStatus || "",
-                    category: filters.category || "",
-                    sortBy: filters.sortBy || "title",
-                    order: filters.order || "asc",
-                }).toString();
-                url = `${API_BASE_URL}/books/filter?${queryParams}`;
-            }
+            const url = useFilters 
+                ? `${API_BASE_URL}/books/filter?${queryParams}` 
+                : `${API_BASE_URL}/books/user?email=${encodeURIComponent(email)}`;
     
             const response = await fetch(url);
             if (!response.ok) throw new Error("Failed to fetch books.");
@@ -85,7 +84,7 @@ const BooksPage: React.FC = () => {
         } catch (error) {
             console.error("Error fetching books:", error);
         }
-    }, [filters]);
+    }, [filters]);  // ✅ Keep filters dependency
 
     const fetchReviewsForBooks = async (books: Book[]) => {
         const userId = localStorage.getItem("userId");
@@ -281,8 +280,8 @@ const BooksPage: React.FC = () => {
     };
     
     useEffect(() => {
-        fetchBooks();
-    }, [fetchBooks]);
+        fetchBooks(); // Fetch without filters on initial load
+    }, []);
 
     return (
         <BooksWrapper>
