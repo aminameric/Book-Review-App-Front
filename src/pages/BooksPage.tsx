@@ -9,14 +9,15 @@ import BookFilters from "../components/BookFilters";
 import { BooksWrapper, AddButton, HeaderActions } from "../styles/BooksPageStyles";
 import { Book } from "../types/Book";
 import API_BASE_URL from "../config";
+import styled from "styled-components";
 
 interface NewBookState {
     title: string;
     author: string;
     categoryName: string;
     readingStatus: string;
-    reviewContent?: string;
-    reviewRating?: number;
+    reviewContent: string;
+    reviewRating: number;
 }
 
 const BooksPage: React.FC = () => {
@@ -32,8 +33,8 @@ const BooksPage: React.FC = () => {
         author: "",
         categoryName: "",
         readingStatus: "",
-        reviewContent: "",
-        reviewRating: 0,
+        reviewContent: "",    
+        reviewRating: 0,      
     });
     const [filters, setFilters] = useState({
         title: '',
@@ -43,7 +44,7 @@ const BooksPage: React.FC = () => {
         sortBy: 'title',
         order: 'asc'
     });
-    
+
 
     const navigate = useNavigate();
 
@@ -59,7 +60,7 @@ const BooksPage: React.FC = () => {
                 console.error("No email found in localStorage.");
                 return;
             }
-    
+
             // Dynamically choose between filtered and unfiltered fetch
             const queryParams = new URLSearchParams({
                 title: useFilters ? filters.title : "",
@@ -69,14 +70,14 @@ const BooksPage: React.FC = () => {
                 sortBy: filters.sortBy || "title",
                 order: filters.order || "asc",
             }).toString();
-    
-            const url = useFilters 
-                ? `${API_BASE_URL}/books/filter?${queryParams}` 
+
+            const url = useFilters
+                ? `${API_BASE_URL}/books/filter?${queryParams}`
                 : `${API_BASE_URL}/books/user?email=${encodeURIComponent(email)}`;
-    
+
             const response = await fetch(url);
             if (!response.ok) throw new Error("Failed to fetch books.");
-            
+
             const booksData = await response.json();
             const booksWithReviews = await fetchReviewsForBooks(booksData);
             setBooks(booksWithReviews);
@@ -84,7 +85,7 @@ const BooksPage: React.FC = () => {
         } catch (error) {
             console.error("Error fetching books:", error);
         }
-    }, [filters]);  // ✅ Keep filters dependency
+    }, [filters]);  
 
     const fetchReviewsForBooks = async (books: Book[]) => {
         const userId = localStorage.getItem("userId");
@@ -121,27 +122,29 @@ const BooksPage: React.FC = () => {
         }, {} as { [key: string]: Book[] });
     };
 
-    const handleGenerateCategory = async () => {
+    const handleGenerateCategory = async (): Promise<string> => {
         try {
             const response = await fetch(`${API_BASE_URL}/categories/suggest?title=${newBook.title}`);
             if (!response.ok) throw new Error("Failed to generate category.");
             const category = await response.text();
             setNewBook((prev) => ({ ...prev, categoryName: category }));
+            return category; 
         } catch (error) {
             console.error("Error generating category:", error);
+            throw error; 
         }
     };
 
     const handleAddBook = async () => {
         try {
             const userId = localStorage.getItem("userId");
-    
+
             if (!userId) {
                 console.error("User ID is missing.");
                 return;
             }
-    
-            // ✅ Step 1: Add the book first
+
+            // Add the book first
             const bookResponse = await fetch(`${API_BASE_URL}/books`, {
                 method: "POST",
                 headers: {
@@ -155,14 +158,14 @@ const BooksPage: React.FC = () => {
                     userId: parseInt(userId),
                 }),
             });
-    
+
             if (!bookResponse.ok) {
                 throw new Error("Failed to add the book.");
             }
-    
+
             let addedBook: Book = await bookResponse.json();
-    
-            // ✅ Step 2: Conditionally add review if provided
+
+            // Conditionally add review if provided
             if (newBook.reviewContent && newBook.reviewRating && newBook.reviewRating > 0) {
                 const reviewResponse = await fetch(`${API_BASE_URL}/user-books`, {
                     method: "POST",
@@ -173,24 +176,24 @@ const BooksPage: React.FC = () => {
                         content: newBook.reviewContent,
                         rating: newBook.reviewRating,
                         userId: parseInt(userId),
-                        bookId: addedBook.id,  // Link review to the newly added book
+                        bookId: addedBook.id,  
                     }),
                 });
-    
+
                 if (!reviewResponse.ok) {
                     throw new Error("Failed to add the review.");
                 }
-    
+
                 const addedReview = await reviewResponse.json();
                 addedBook = { ...addedBook, review: addedReview }; 
             }
-    
-            // ✅ Step 3: Update the state with the new book
+
+            // Update the state with the new book
             setBooks((prevBooks) => [...prevBooks, addedBook]);
             setGroupedBooks(groupBooksByCategory([...books, addedBook]));
             setIsModalOpen(false);
-    
-            // ✅ Step 4: Reset the form fields after adding
+
+            // Reset the form fields after adding
             setNewBook({
                 title: "",
                 author: "",
@@ -199,7 +202,7 @@ const BooksPage: React.FC = () => {
                 reviewContent: "",
                 reviewRating: 0,
             });
-    
+
             alert("Book added successfully!");
         } catch (error) {
             console.error("Error adding book and/or review:", error);
@@ -208,7 +211,7 @@ const BooksPage: React.FC = () => {
     };
     
     
-    // ✅ New function to handle cancel and reset the modal
+    // New function to handle cancel and reset the modal
     const handleCancel = () => {
         setIsModalOpen(false);
         setNewBook({
@@ -227,16 +230,16 @@ const BooksPage: React.FC = () => {
             const response = await fetch(`${API_BASE_URL}/books/${bookId}`, {
                 method: "DELETE",
             });
-    
+
             if (!response.ok) {
                 throw new Error("Failed to delete the book.");
             }
-    
-            // ✅ Immediately update the local state
+
+            // Immediately update the local state
             const updatedBooks = books.filter((book) => book.id !== bookId);
             setBooks(updatedBooks);
             setGroupedBooks(groupBooksByCategory(updatedBooks));
-    
+
             setIsDeletePopupOpen(false);
             setBookToDelete(null);
             alert("Book deleted successfully!");
@@ -244,7 +247,7 @@ const BooksPage: React.FC = () => {
             console.error("Error deleting book:", error);
         }
     };
-    
+
 
     const handleEditClick = (book: Book) => {
         setEditedBook({ ...book });
@@ -280,21 +283,28 @@ const BooksPage: React.FC = () => {
     };
     
     useEffect(() => {
-        fetchBooks(); // Fetch without filters on initial load
+        fetchBooks(); 
     }, []);
+
+    const handleNavigateToReport = () => {
+        navigate("/report");
+    };
 
     return (
         <BooksWrapper>
             <NavbarComponent handleLogout={handleLogout} />
             {/* Filters Section Added Here */}
             <BookFilters filters={filters} setFilters={setFilters} fetchBooks={fetchBooks} />
+            <ReportButton onClick={handleNavigateToReport}>
+                Generate Report
+            </ReportButton>
             <HeaderActions>
                 <AddButton onClick={() => setIsModalOpen(true)}>Add Book</AddButton>
             </HeaderActions>
 
             {isModalOpen && (
                 <AddBookModal
-                    onClose={handleCancel}  // Use handleCancel here for proper reset
+                    onClose={handleCancel}  
                     onAddBook={handleAddBook}
                     onGenerateCategory={handleGenerateCategory}
                     newBook={newBook}
@@ -333,3 +343,23 @@ const BooksPage: React.FC = () => {
 };
 
 export default BooksPage;
+
+const ReportButton = styled.button`
+    background-color: #b7a57a;
+    color: #4a4a4a;
+    border: none;
+    padding: 1rem 1.5rem;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: bold;
+    margin-top: 3.5rem;
+    position: absolute;  /* Moves the button to a fixed position on the left */
+    left: 15rem;          /* Adjust this value to move it further left */
+    display: block;
+    width: fit-content;
+
+    &:hover {
+        background-color: #a09070;
+    }
+`;
+
