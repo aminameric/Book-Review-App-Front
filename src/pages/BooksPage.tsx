@@ -5,6 +5,7 @@ import BookList from "../components/BookList";
 import AddBookModal from "../components/AddBookModal";
 import DeleteConfirmationModal from "../components/DeleteConfirmationModal";
 import EditBookModal from "../components/EditBookModal";
+import BookFilters from "../components/BookFilters";
 import { BooksWrapper, AddButton, HeaderActions } from "../styles/BooksPageStyles";
 import { Book } from "../types/Book";
 import API_BASE_URL from "../config";
@@ -34,6 +35,15 @@ const BooksPage: React.FC = () => {
         reviewContent: "",
         reviewRating: 0,
     });
+    const [filters, setFilters] = useState({
+        title: '',
+        author: '',
+        readingStatus: '',
+        category: '',
+        sortBy: 'title',
+        order: 'asc'
+    });
+    
 
     const navigate = useNavigate();
 
@@ -42,15 +52,32 @@ const BooksPage: React.FC = () => {
         navigate("/");
     };
 
-    const fetchBooks = useCallback(async () => {
+    const fetchBooks = useCallback(async (useFilters = false) => {
         try {
             const email = localStorage.getItem("userEmail");
             if (!email) {
                 console.error("No email found in localStorage.");
                 return;
             }
-            const response = await fetch(`${API_BASE_URL}/books/user?email=${encodeURIComponent(email)}`);
+    
+            let url = `${API_BASE_URL}/books/user?email=${encodeURIComponent(email)}`;
+    
+            // If filters should be used, append them as query parameters
+            if (useFilters) {
+                const queryParams = new URLSearchParams({
+                    title: filters.title || "",
+                    author: filters.author || "",
+                    readingStatus: filters.readingStatus || "",
+                    category: filters.category || "",
+                    sortBy: filters.sortBy || "title",
+                    order: filters.order || "asc",
+                }).toString();
+                url = `${API_BASE_URL}/books/filter?${queryParams}`;
+            }
+    
+            const response = await fetch(url);
             if (!response.ok) throw new Error("Failed to fetch books.");
+            
             const booksData = await response.json();
             const booksWithReviews = await fetchReviewsForBooks(booksData);
             setBooks(booksWithReviews);
@@ -58,7 +85,7 @@ const BooksPage: React.FC = () => {
         } catch (error) {
             console.error("Error fetching books:", error);
         }
-    }, []);
+    }, [filters]);
 
     const fetchReviewsForBooks = async (books: Book[]) => {
         const userId = localStorage.getItem("userId");
@@ -252,7 +279,7 @@ const BooksPage: React.FC = () => {
             console.error("Error saving edit:", error);
         }
     };
-
+    
     useEffect(() => {
         fetchBooks();
     }, [fetchBooks]);
@@ -260,6 +287,8 @@ const BooksPage: React.FC = () => {
     return (
         <BooksWrapper>
             <NavbarComponent handleLogout={handleLogout} />
+            {/* Filters Section Added Here */}
+            <BookFilters filters={filters} setFilters={setFilters} fetchBooks={fetchBooks} />
             <HeaderActions>
                 <AddButton onClick={() => setIsModalOpen(true)}>Add Book</AddButton>
             </HeaderActions>
@@ -281,7 +310,7 @@ const BooksPage: React.FC = () => {
                 confirmDelete={(bookId) => {
                     setBookToDelete(bookId);
                     setIsDeletePopupOpen(true);
-                }}
+                }}   
             />
 
             {isDeletePopupOpen && (
